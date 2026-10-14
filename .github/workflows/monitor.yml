@@ -1,0 +1,44 @@
+name: T5.1 monitor
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"        # every Monday, 06:17 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q
+      - id: run
+        run: python monitor.py
+        env:
+          # MONITOR_TOKEN: a token that can read private repositories in the map (e.g. qkd-simulator)
+          GITHUB_TOKEN: ${{ secrets.MONITOR_TOKEN || secrets.GITHUB_TOKEN }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          LIBRARIES_IO_KEY: ${{ secrets.LIBRARIES_IO_KEY }}
+      - name: Commit the updated Excel file and report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add data reports
+          git diff --cached --quiet || git commit -m "Monitor run $(date -u +%F)"
+          git push
+      - name: Open an issue for the expert review
+        if: steps.run.outputs.news == 'true'
+        run: |
+          title="T5.1 monitor: changes on $(date -u +%F)"
+          gh label create monitor --color 1F3864 --description "T5.1 monitor runs" 2>/dev/null || true
+          gh issue create --title "$title" --body-file reports/latest.md --label monitor
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

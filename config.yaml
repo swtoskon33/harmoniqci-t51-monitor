@@ -1,0 +1,64 @@
+# Settings of the T5.1 monitor. See README.md and PROCESS.md.
+
+excel: data/HARMONIQCI_open_source_tools.xlsx
+report: reports/latest.md
+
+# Sheets of the Excel file
+sheets:
+  tools: Tool map
+  scores: Scoring
+  changes: Changes
+  candidates: Candidates
+
+# A tool with no commit for longer than this is marked as inactive
+stale_days: 365
+
+# Discovery of new tools. A result is proposed when it is not in the Excel file yet (also not as
+# the GitHub repository behind a Zenodo record or a package), is not a fork, is not archived, was
+# updated within the last max_age_days, and its name, description or topics match both "topic"
+# and "relevant" (regular expressions, case-insensitive): QKD, and something of the network or ETSI.
+discovery:
+  max_age_days: 730
+  per_query: 30
+  topic: 'qkd|quantum[ _-]?key|etsi'
+  relevant: 'etsi|gs[ _-]?qkd|qkd[ _-]?0?(04|14|15|16|18|20)\b|\bkme\b|\bkms\b|key[ _-]?(management|delivery|relay)|\bsdn\b|sd-qkd|orchestrat|qkd[ _-]?network|network[ _-]?simulat|trusted[ _-]?node|\bsae\b'
+
+  # GitHub search syntax
+  github:
+    - '"ETSI GS QKD" in:name,description,readme'
+    - '"QKD 014" in:name,description,readme'
+    - '"QKD 015" in:name,description,readme'
+    - '"QKD 004" in:name,description,readme'
+    - '"QKD 020" in:name,description,readme'
+    - 'qkd kme in:name,description'
+    - 'qkd kms in:name,description'
+    - 'qkd sdn in:name,description'
+    - 'quantum key distribution network simulator in:name,description'
+    - 'topic:qkd'
+    - 'topic:quantum-key-distribution'
+
+  # GitLab instances (gitlab.com and self-hosted ones such as the ETSI Forge); the same hosts are
+  # used to read the tools of the map that live there. Plain search words.
+  gitlab:
+    hosts:
+      - https://gitlab.com
+      - https://forge.etsi.org/rep
+    queries:
+      - qkd
+      - quantum key distribution
+      - etsi qkd
+
+  # Zenodo (software records), Elasticsearch query syntax
+  zenodo:
+    - '"ETSI GS QKD"'
+    - 'QKD AND (KME OR KMS OR "key management")'
+    - 'QKD AND (SDN OR "software defined")'
+    - '"quantum key distribution" AND network AND simulator'
+
+  # Packages (PyPI by default) through Libraries.io; runs only when LIBRARIES_IO_KEY is set
+  librariesio:
+    platforms: PyPI
+    queries:
+      - qkd
+      - etsi qkd
+      - quantum key distribution
